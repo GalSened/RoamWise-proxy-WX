@@ -1102,6 +1102,48 @@ app.get('/api/hazards', async (req, res) => {
   }
 });
 
+// Forward /api/places/search to backend-v2 (Google Places API)
+app.post('/api/places/search', async (req, res) => {
+  if (!BACKEND_V2_URL) {
+    return res.status(503).json({ ok: false, code: 'backend_not_configured' });
+  }
+  try {
+    const r = await fetch(`${BACKEND_V2_URL}/api/places/search`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-lang': req.headers['x-lang'] || 'he',
+      },
+      body: JSON.stringify(req.body || {}),
+    });
+    const txt = await r.text();
+    res.status(r.status).set('content-type', r.headers.get('content-type') || 'application/json').send(txt);
+  } catch (error) {
+    logger.error('Backend-v2 places/search error:', error);
+    res.status(502).json({ ok: false, code: 'backend_error' });
+  }
+});
+
+// Forward /api/places/:placeId to backend-v2 (Place details)
+app.get('/api/places/:placeId', async (req, res) => {
+  if (!BACKEND_V2_URL) {
+    return res.status(503).json({ ok: false, code: 'backend_not_configured' });
+  }
+  try {
+    const r = await fetch(`${BACKEND_V2_URL}/api/places/${encodeURIComponent(req.params.placeId)}`, {
+      method: 'GET',
+      headers: {
+        'x-lang': req.headers['x-lang'] || 'he',
+      },
+    });
+    const txt = await r.text();
+    res.status(r.status).set('content-type', r.headers.get('content-type') || 'application/json').send(txt);
+  } catch (error) {
+    logger.error('Backend-v2 places/details error:', error);
+    res.status(502).json({ ok: false, code: 'backend_error' });
+  }
+});
+
 // Forward /api/profile to backend-v2 (JWT auth via cookies)
 app.all('/api/profile', async (req, res) => {
   if (!BACKEND_V2_URL) {
@@ -1222,6 +1264,29 @@ app.get('/admin/health', async (req, res) => {
     res.status(r.status).set('content-type', r.headers.get('content-type') || 'text/html').send(txt);
   } catch (error) {
     logger.error('Backend-v2 dashboard error:', error);
+    res.status(502).json({ ok: false, code: 'backend_error' });
+  }
+});
+
+// Forward /planner/plan-day to backend-v2 (Day planner endpoint - Step 7B)
+app.post('/planner/plan-day', async (req, res) => {
+  if (!BACKEND_V2_URL) {
+    return res.status(503).json({ ok: false, code: 'backend_not_configured' });
+  }
+  try {
+    const r = await fetch(`${BACKEND_V2_URL}/planner/plan-day`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-lang': req.headers['x-lang'] || 'he',
+        cookie: req.headers.cookie || '',
+      },
+      body: JSON.stringify(req.body || {}),
+    });
+    const txt = await r.text();
+    res.status(r.status).set('content-type', r.headers.get('content-type') || 'application/json').send(txt);
+  } catch (error) {
+    logger.error('Backend-v2 planner/plan-day error:', error);
     res.status(502).json({ ok: false, code: 'backend_error' });
   }
 });
