@@ -1,0 +1,39 @@
+name: MUST-TEST Proxy
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  PROXY: https://roamwise-proxy-971999716773.us-central1.run.app
+
+jobs:
+  must-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Test Proxy Route
+        run: ./scripts/test-proxy-route.sh
+
+      - name: Test Proxy Matrix
+        run: ./scripts/test-proxy-matrix.sh
+
+      - name: Test Proxy Places
+        run: ./scripts/test-proxy-places.sh
+
+      - name: Test Proxy Planner
+        run: ./scripts/test-proxy-planner.sh
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "✅ All MUST-TEST proxy scripts passed"
+          echo "Proxy: $PROXY"
