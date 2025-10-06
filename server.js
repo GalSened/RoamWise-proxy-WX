@@ -1226,6 +1226,60 @@ app.get('/admin/health', async (req, res) => {
   }
 });
 
+// Forward /api/route/matrix to backend-v2 (OSRM distance matrix)
+app.post('/api/route/matrix', async (req, res) => {
+  if (!BACKEND_V2_URL) {
+    return res.status(503).json({ ok: false, code: 'backend_not_configured' });
+  }
+  try {
+    const r = await fetch(`${BACKEND_V2_URL}/api/route/matrix`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(req.body || {}),
+    });
+    const txt = await r.text();
+    res.status(r.status).set('content-type', r.headers.get('content-type') || 'application/json').send(txt);
+  } catch (error) {
+    logger.error('Backend-v2 route/matrix error:', error);
+    res.status(502).json({ ok: false, code: 'backend_error' });
+  }
+});
+
+// Forward /api/places/search to backend-v2 (OSM places search)
+app.get('/api/places/search', async (req, res) => {
+  if (!BACKEND_V2_URL) {
+    return res.status(503).json({ ok: false, code: 'backend_not_configured' });
+  }
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const r = await fetch(`${BACKEND_V2_URL}/api/places/search?${qs}`);
+    const txt = await r.text();
+    res.status(r.status).set('content-type', r.headers.get('content-type') || 'application/json').send(txt);
+  } catch (error) {
+    logger.error('Backend-v2 places/search error:', error);
+    res.status(502).json({ ok: false, code: 'backend_error' });
+  }
+});
+
+// Forward /planner/plan-day to backend-v2 (AI day planner)
+app.post('/planner/plan-day', async (req, res) => {
+  if (!BACKEND_V2_URL) {
+    return res.status(503).json({ ok: false, code: 'backend_not_configured' });
+  }
+  try {
+    const r = await fetch(`${BACKEND_V2_URL}/planner/plan-day`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(req.body || {}),
+    });
+    const txt = await r.text();
+    res.status(r.status).set('content-type', r.headers.get('content-type') || 'application/json').send(txt);
+  } catch (error) {
+    logger.error('Backend-v2 planner/plan-day error:', error);
+    res.status(502).json({ ok: false, code: 'backend_error' });
+  }
+});
+
 // ✨ ENHANCED ERROR HANDLING & MONITORING
 
 // Global error handler
