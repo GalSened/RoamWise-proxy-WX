@@ -2,7 +2,9 @@ name: MUST-TEST Proxy
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ 'stabilize/2025-10-02-1143' ]
+  push:
+    branches: [ 'stabilize/2025-10-02-1143' ]
   workflow_dispatch:
 
 env:
